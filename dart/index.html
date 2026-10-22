@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>دارت | Filler Shot — ماموریت خط‌ها</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07060b;--card:#12101a;--line:#2a2538;--gold:#e8c27a;--rose:#ff6b9d;--cy:#5ee7ff;--tx:#f2eef8;--mut:#9a93ad}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:Vazirmatn,Tahoma,sans-serif;line-height:1.9;overflow-x:hidden}
+canvas#fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+section{position:relative;z-index:1;min-height:100vh;padding:90px 6vw;display:flex;flex-direction:column;justify-content:center;max-width:1200px;margin:auto}
+h1{font-size:clamp(3rem,11vw,8rem);font-weight:900;line-height:1.1;background:linear-gradient(120deg,var(--gold),var(--rose),var(--cy));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:clamp(1.8rem,5vw,3.2rem);font-weight:800;margin-bottom:18px}
+h2 em{font-style:normal;color:var(--gold)}
+p.lead{color:var(--mut);font-size:1.1rem;max-width:720px}
+.tag{display:inline-block;border:1px solid var(--gold);color:var(--gold);padding:2px 14px;border-radius:99px;font-size:.8rem;margin-bottom:18px;letter-spacing:.1em}
+.reveal{opacity:0;transform:translateY(50px);transition:all .9s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+#hud{position:fixed;top:0;inset-inline:0;z-index:50;display:flex;gap:18px;align-items:center;padding:10px 20px;background:rgba(7,6,11,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);font-size:.85rem}
+#hud .bar{flex:1;height:8px;background:var(--line);border-radius:9px;overflow:hidden}
+#hud .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--rose));transition:width .6s}
+#prog{position:fixed;top:0;right:0;height:3px;background:var(--cy);z-index:60;width:0}
+.btn{background:linear-gradient(120deg,var(--gold),var(--rose));color:#14101a;border:0;padding:14px 34px;border-radius:99px;font:800 1rem Vazirmatn;cursor:pointer;margin-top:28px;width:fit-content;transition:transform .2s}
+.btn:hover{transform:scale(1.06)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:30px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;cursor:pointer;transition:.3s;position:relative;overflow:hidden}
+.card:hover{border-color:var(--gold);transform:translateY(-6px)}
+.card.done{border-color:var(--cy);box-shadow:0 0 24px rgba(94,231,255,.2)}
+.card h3{color:var(--gold);margin-bottom:6px}
+.card .more{max-height:0;overflow:hidden;color:var(--mut);font-size:.92rem;transition:max-height .5s}
+.card.open .more{max-height:200px;margin-top:8px}
+.card .xp{position:absolute;top:12px;left:14px;font-size:.75rem;color:var(--cy)}
+/* tube */
+.hero-tube{width:90px;height:300px;margin:30px 0;border-radius:14px 14px 40px 40px;background:linear-gradient(160deg,#fff3,#e8c27a55 40%,#ff6b9d55);border:1px solid #fff4;box-shadow:0 0 80px #ff6b9d55;animation:fl 5s ease-in-out infinite;position:relative}
+.hero-tube::after{content:"DART";position:absolute;top:45%;left:50%;transform:translate(-50%,-50%) rotate(90deg);font-weight:900;letter-spacing:.3em;color:#fff9;font-size:1.2rem}
+@keyframes fl{50%{transform:translateY(-18px) rotate(3deg)}}
+/* face */
+.facewrap{display:flex;gap:40px;flex-wrap:wrap;align-items:center;margin-top:24px}
+svg.face{width:280px;max-width:100%}
+svg.face .z{fill:#ff6b9d22;stroke:var(--rose);stroke-width:1.5;cursor:pointer;transition:.3s}
+svg.face .z:hover,svg.face .z.on{fill:#ff6b9d88}
+svg.face .z.seen{stroke:var(--cy)}
+#zinfo{flex:1;min-width:240px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;min-height:140px}
+/* timeline */
+.tl{display:flex;gap:0;margin-top:34px;flex-wrap:wrap}
+.tl div{flex:1;min-width:150px;border-top:3px solid var(--line);padding:16px 8px;transition:.6s}
+.tl div.in{border-color:var(--gold)}
+.tl b{color:var(--gold);display:block}
+/* quiz */
+#quiz{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:30px;margin-top:20px}
+.opt{display:block;width:100%;text-align:right;background:#1b1826;color:var(--tx);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:8px 0;font:inherit;cursor:pointer;transition:.2s}
+.opt:hover{border-color:var(--gold)}
+.opt.ok{background:#12382f;border-color:#3be29a}
+.opt.bad{background:#3a1424;border-color:var(--rose)}
+#expl{color:var(--mut);margin-top:10px;font-size:.92rem}
+.badges{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.badge{padding:8px 16px;border-radius:99px;border:1px dashed var(--line);color:var(--mut);font-size:.85rem}
+.badge.on{border:1px solid var(--gold);color:var(--gold);background:#e8c27a15}
+.note{margin-top:40px;color:var(--mut);font-size:.8rem;border-top:1px solid var(--line);padding-top:14px}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--gold);color:#111;padding:10px 24px;border-radius:99px;font-weight:800;z-index:99;transition:.5s}
+#toast.show{transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<div id="hud"><span>🎯 سطح <b id="lv">1</b></span><div class="bar"><i id="xpbar"></i></div><span><b id="xp">0</b> XP</span><span>🔥 <b id="streak">0</b></span></div>
+<canvas id="fx"></canvas>
+
+<section id="s0" style="text-align:center;align-items:center">
+  <span class="tag">DART · FILLER SHOT</span>
+  <h1>دارت</h1>
+  <div class="hero-tube"></div>
+  <p class="lead">تیوپ سرباریک ۲۰ میلی‌لیتری برای هدف‌گیری دقیق خط‌های صورت و گردن.<br>ماموریت تو: یاد بگیر، امتیاز بگیر، حرفه‌ای معرفی کن.</p>
+  <button class="btn" onclick="document.getElementById('s1').scrollIntoView();gain(10,'شروع ماموریت +۱۰')">شروع ماموریت</button>
+</section>
+
+<section id="s1">
+  <span class="tag">فصل ۱ · مسئله</span>
+  <h2 class="reveal">خط‌هایی که <em>هر روز</em> ساخته می‌شوند</h2>
+  <p class="lead reveal">مشتری از خط پیشانی، خط اخم، پنجه‌کلاغی، خط خنده، نازولبیال یا خط گردن شکایت دارد؛ حاصل الگوهای روزمره زندگی. دارت یک محصول موضعی برای استفاده نقطه‌ای یا ناحیه‌ای است.</p>
+  <div class="facewrap reveal">
+    <svg class="face" viewBox="0 0 200 260">
+      <ellipse cx="100" cy="115" rx="68" ry="88" fill="#1b1826" stroke="#3a3350"/>
+      <rect x="100" y="190" width="0" height="0"/>
+      <path d="M80 200 Q100 250 120 200 L130 250 Q100 262 70 250Z" fill="#1b1826" stroke="#3a3350"/>
+      <rect class="z" data-z="forehead" x="55" y="45" width="90" height="26" rx="12"/>
+      <rect class="z" data-z="glabella" x="86" y="78" width="28" height="22" rx="10"/>
+      <ellipse class="z" data-z="crow" cx="42" cy="108" rx="10" ry="14"/>
+      <ellipse class="z" data-z="crow" cx="158" cy="108" rx="10" ry="14"/>
+      <path class="z" data-z="naso" d="M62 150 Q70 172 78 182 L86 176 Q76 160 70 146Z"/>
+      <path class="z" data-z="naso" d="M138 150 Q130 172 122 182 L114 176 Q124 160 130 146Z"/>
+      <rect class="z" data-z="neck" x="78" y="214" width="44" height="28" rx="10"/>
+    </svg>
+    <div id="zinfo"><b>روی یک ناحیه بزن</b><p style="color:var(--mut)">هر ناحیه جدید = +۲۰ XP</p></div>
+  </div>
+</section>
+
+<section id="s2">
+  <span class="tag">فصل ۲ · ترکیبات</span>
+  <h2 class="reveal">اکتیوهایی که <em>در سند</em> آمده‌اند</h2>
+  <p class="lead reveal">روی هر کارت بزن تا باز شود (+۱۵ XP). نقش‌ها طبق متن مستند منبع است، نه ادعای بالینی.</p>
+  <div class="grid" id="ing"></div>
+</section>
+
+<section id="s3">
+  <span class="tag">فصل ۳ · انتظار درست</span>
+  <h2 class="reveal">نتیجه <em>تدریجی</em>، نه معجزه</h2>
+  <p class="lead reveal">طبق متن بسته‌بندی، نتایج قابل مشاهده حدود ۲ تا ۴ هفته ذکر شده؛ تضمین فردی نیست. Filler Shot یعنی تزریق یا نتیجه فوری هم‌ارز تزریق <b>نیست</b>.</p>
+  <div class="tl reveal"><div><b>روز ۱</b>شروع منظم طبق برچسب</div><div><b>هفته ۱</b>حس آبرسانی و لطافت</div><div><b>هفته ۲–۴</b>بازه نتیجه قابل مشاهده طبق بسته‌بندی</div><div><b>بعد</b>ادامه با روتین سازگار</div></div>
+</section>
+
+<section id="s4">
+  <span class="tag">فصل ۴ · میدان فروش</span>
+  <h2 class="reveal">اعتراض‌ها را <em>برنده شو</em></h2>
+  <p class="lead reveal">کارت را بزن تا پاسخ استاندارد را ببینی (+۱۵ XP).</p>
+  <div class="grid" id="obj"></div>
+</section>
+
+<section id="s5">
+  <span class="tag">فصل ۵ · آزمون نهایی</span>
+  <h2 class="reveal">۱۰ سوال، <em>یک عنوان</em></h2>
+  <div id="quiz"></div>
+  <div class="badges" id="badges"></div>
+  <p class="note">محتوای آموزشی بر پایه فایل «دارت | Filler Shot» (نسخه ۱۴۰۵/۰۷/۱۲). قیمت، سود، موجودی، بارداری، مقدار و دفعات مصرف در سند نیامده؛ به برچسب رسمی و داروساز/پزشک ارجاع دهید.</p>
+</section>
+
+<div id="toast"></div>
+<script>
+const QUIZ={
+  "key": "DART FILLER SHOT",
+  "nameFa": "فیلر شات دارت (DART Filler Shot)",
+  "nameEn": "DART FILLER SHOT",
+  "questions": [
+    {
+      "stem": "حجم محصول فیلر شات دارت (DART) چقدر است و مشخصه اصلی اپلیکاتور و بسته‌بندی آن چیست؟",
+      "options": [
+        "۷۵ میلی‌لیتر - پمپ اسپری",
+        "۲۰ میلی‌لیتر - تیوپ سرباریک برای استفاده نقطه‌ای و دقیق روی خطوط",
+        "۱۱۰ میلی‌لیتر - قطره‌چکان شیشه‌ای",
+        "۲۱۲ میلی‌لیتر - قالب سیلیکونی"
+      ],
+      "answer": "B",
+      "explanation": "فیلر شات دارت یک کرم/کمپلکس ۲۰ میلی‌لیتری با تیوپ سرباریک برای هدف‌گیری نقطه‌ای خطوط است."
+    },
+    {
+      "stem": "هدف اصلی و پیام محوری از طراحی محصول فیلر شات دارت (DART) چیست؟",
+      "options": [
+        "پاکسازی عمیق منافذ و لایه‌برداری فیزیکی صورت",
+        "ضدچروک موضعی و آبرسان هدفمند برای خطوط صورت و گردن (Tech Neck)",
+        "ایجاد گرمای موضعی برای تسکین دردهای عضلانی",
+        "ترمیم ترک‌های عمیق پاشنه پا"
+      ],
+      "answer": "B",
+      "explanation": "دارت یک محصول موضعی ضدچروک و آبرسان برای هدف‌گیری خطوط و چروک‌های صورت و گردن است."
+    },
+    {
+      "stem": "بر اساس مستند راهنما، نتایج قابل مشاهده فیلر شات دارت طبق اطلاعات بسته‌بندی طی چه بازه زمانی دیده می‌شود و برای چه گروه‌های سنی مناسب است؟",
+      "options": [
+        "طی ۲۴ ساعت اول - فقط برای افراد بالای ۶۰ سال",
+        "طی حدود ۲ تا ۴ هفته - برای افراد از دهه ۲۰ تا ۵۰ زندگی (از خطوط اولیه تا چروک‌های واضح‌تر)",
+        "دقیقاً بعد از ۳ ماه - فقط برای دهه ۳۰ زندگی",
+        "نیازمند ۶ ماه مصرف مداوم - صرفاً برای سنین زیر ۲۰ سال"
+      ],
+      "answer": "B",
+      "explanation": "نتایج طبق بسته‌بندی طی ۲ تا ۴ هفته مشخص می‌شود و برای دهه ۲۰ تا ۵۰ زندگی طراحی شده است."
+    },
+    {
+      "stem": "دو ترکیب Palmitoyl Tetrapeptide-7 و Ceramide NP در فرمولاسیون فیلر شات دارت به ترتیب چه نقشی بر عهده دارند؟",
+      "options": [
+        "لایه‌برداری اسیدی - کنترل چربی و ایجاد کف",
+        "پپتید ضدپیری برای کاهش ظاهر چروک‌ها - کمک به بازسازی سد دفاعی پوست",
+        "ایجاد گرمای موضعی - خنک‌سازی پوست",
+        "کنترل بوی ناخوشایند - پاکسازی میسلار"
+      ],
+      "answer": "B",
+      "explanation": "پپتید تتراپپتید-۷ ضدپیری و کاهنده چروک است و سرامید NP به بازسازی سد دفاعی پوست کمک می‌کند."
+    },
+    {
+      "stem": "فیلر شات دارت دقیقاً برای کدام نواحی حاوی خطوط ریز و چروک در صورت و گردن طراحی شده است؟",
+      "options": [
+        "صرفاً لبه خارجی لب‌ها و کف پا",
+        "خطوط پیشانی، خط اخم، پنجه‌کلاغی، خطوط خنده و لبخند، خطوط نازولبیال و خطوط گردن (Tech Neck)",
+        "صرفاً داخل حدقه چشم",
+        "فقط ران و باسن برای سلولیت"
+      ],
+      "answer": "B",
+      "explanation": "مستند صراحتاً خطوط پیشانی، اخم، پنجه‌کلاغی، خنده، نازولبیال و خطوط گردن را نواحی هدف می‌داند."
+    },
+    {
+      "stem": "نقش ترکیب اختصاصی «هیالورونیک اسید 250 kDa و AURORA» در فرمولاسیون دارت چیست؟",
+      "options": [
+        "لایه‌برداری آنزیمی فوق‌العاده قوی سطحی",
+        "آبرسانی هدفمند و کمک به حفظ رطوبت در ابعاد مولکولی مشخص برای پرتر و نرم‌تر نشان دادن خطوط",
+        "ایجاد بالشتک چربی غیرقابل جذب صنعتی",
+        "خنثی‌سازی کامل اثر سایر اکتیوها"
+      ],
+      "answer": "B",
+      "explanation": "هیالورونیک اسید با وزن مولکولی ۲۵۰ کیلودالتون و آورورا آبرسانی و حفظ رطوبت را در عمق مناسب انجام می‌دهند."
+    },
+    {
+      "stem": "حضور هم‌زمان «رتینول» در کنار «نیاسینامید و آلفا آربوتین» در فیلر شات دارت چه اثر مکملی ایجاد می‌کند؟",
+      "options": [
+        "رتینول به نوسازی پوست و ساخت کلاژن کمک کرده و نیاسینامید و آلفا آربوتین به شفافیت و یکنواختی رنگ پوست کمک می‌کنند.",
+        "رتینول باعث لایه‌برداری عمیق حاد شده و آربوتین چربی پوست را کاملاً خشک می‌کند.",
+        "نیاسینامید رتینول را خنثی می‌کند تا محصول هیچ فعالیتی نداشته باشد.",
+        "آلفا آربوتین باعث ایجاد گرمای شدید در پوست می‌شود."
+      ],
+      "answer": "A",
+      "explanation": "رتینول نوسازی و کلاژن‌سازی را تحریک می‌کند و نیاسینامید و آلفا آربوتین شفافیت و یکنواختی رنگ پوست را تکمیل می‌کنند."
+    },
+    {
+      "stem": "کدام ترکیبات در فیلر شات دارت وظیفه رطوبت‌رسانی، نرمی و محافظت آنتی‌اکسیدانی را در کنار اکتیوهای قوی بر عهده دارند؟",
+      "options": [
+        "جوش شیرین و اوره ۱۰٪",
+        "پانتنول، ویتامین E و آلانتوئین",
+        "آرنیکا و زردچوبه",
+        "عصاره ماچا و گلوتاتیون"
+      ],
+      "answer": "B",
+      "explanation": "پانتنول، ویتامین E و آلانتوئین نرمی، رطوبت‌رسانی و محافظت آنتی‌اکسیدانی را در دارت فراهم می‌کنند."
+    },
+    {
+      "stem": "الگوی پیشنهادی استفاده از فیلر شات دارت بر اساس مستند برای دهه ۲۰، دهه ۳۰ و دهه ۴۰ به بعد چگونه تفکیک شده است؟",
+      "options": [
+        "دهه ۲۰: چروک‌های عمیق / دهه ۳۰: افتادگی شدید / دهه ۴۰: پیشگیری اولیه",
+        "دهه ۲۰: خطوط اولیه / دهه ۳۰: خطوط ریز / دهه ۴۰ به بعد: چروک‌های واضح‌تر و افت ظاهر سفتی پوست",
+        "دهه ۲۰: درمان لک / دهه ۳۰: درمان قارچ / دهه ۴۰: آکنه",
+        "صرفاً برای افراد بالای ۵۰ سال کاربرد دارد."
+      ],
+      "answer": "B",
+      "explanation": "در راهنما آمده است: خطوط اولیه در دهه ۲۰، خطوط ریز در دهه ۳۰ و چروک‌های واضح‌تر در دهه ۴۰ به بعد."
+    },
+    {
+      "stem": "در جمله پیشنهادی ویزیتور برای فروش دارت، ترکیب کدام ۴ اکتیو کلیدی دلیل اثرگذاری بر «صاف‌تر، سفت‌تر و جوان‌تر دیده شدن پوست» عنوان شده است؟",
+      "options": [
+        "اوره، جوش شیرین، درخت چای و موم",
+        "هیالورونیک اسید، پپتید، رتینول و سرامید",
+        "آرنیکا، زردچوبه، ترموالت و تخم‌مرغ",
+        "پانتنول، گلوتاتیون، میسل و آب"
+      ],
+      "answer": "B",
+      "explanation": "جمله ویزیتور صراحتاً ترکیب هیالورونیک اسید، پپتید، رتینول و سرامید را به عنوان دلیل عملکرد عالی معرفی می‌کند."
+    }
+  ]
+};
+const ING=[
+["هیالورونیک اسید ۲۵۰ kDa + AURORA","آبرسانی و حفظ رطوبت (ماهیت دقیق AURORA در سند روشن نیست)"],
+["Palmitoyl Tetrapeptide-7","پپتید مرتبط با کاهش ظاهر چروک"],
+["Ceramide NP","پشتیبانی سد پوستی"],
+["رتینول","نوسازی پوست؛ بدون دستور برچسب، برنامه مصرف قطعی نده"],
+["نیاسینامید + آلفا آربوتین","شفافیت و یکنواختی ظاهر پوست"],
+["پانتنول، ویتامین E، آلانتوئین","لطافت و مراقبت تکمیلی"]];
+const OBJ=[
+["«این فیلر تزریقی است؟»","خیر؛ کرم موضعی برای ظاهر خطوط است."],
+["«چروک عمیق را حذف می‌کند؟»","سند فقط کمک به ظاهر صاف‌تر و قوام پوست را می‌گوید."],
+["«برای زیر چشم؟»","توصیه اختصاصی نزدیک چشم، پلک یا مخاط در سند نیست؛ نام «پنجه‌کلاغی» مجوز تماس با چشم نیست."],
+["«از کی اثر می‌گذارد؟»","حدود ۲ تا ۴ هفته طبق بسته‌بندی؛ تفاوت فردی مهم است."],
+["«با ضدآفتاب؟»","دارت ضدآفتاب نیست؛ محافظت روزانه از آفتاب مستقل است."],
+["«جایگزین مرطوب‌کننده؟»","جایگزینی کامل برای همه پوست‌ها تایید نشده؛ سازگاری روتین بررسی شود."]];
+const ZONES={forehead:["پیشانی","خطوط افقی پیشانی"],glabella:["بین دو ابرو","خط اخم"],crow:["گوشه چشم","پنجه‌کلاغی؛ نزدیک چشم فقط طبق برچسب و با احتیاط، نه تماس مستقیم"],naso:["اطراف دهان","خط خنده/لبخند و نازولبیال"],neck:["گردن","خطوط گردن (Tech Neck)"]};
+let S=JSON.parse(localStorage.getItem('dart')||'{"xp":0,"streak":0,"seen":{},"qd":0,"score":0}');
+const $=id=>document.getElementById(id);
+function save(){try{localStorage.setItem('dart',JSON.stringify(S))}catch(e){}}
+function hud(){const lv=Math.floor(S.xp/100)+1;$('lv').textContent=lv;$('xp').textContent=S.xp;$('streak').textContent=S.streak;$('xpbar').style.width=(S.xp%100)+'%';badges()}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
+function gain(n,m){S.xp+=n;toast(m||('+'+n+' XP'));save();hud()}
+function once(k,n,m){if(S.seen[k])return;S.seen[k]=1;gain(n,m)}
+// ingredients / objections
+function mk(id,arr,pre){const g=$(id);arr.forEach((a,i)=>{const c=document.createElement('div');c.className='card'+(S.seen[pre+i]?' done':'');c.innerHTML='<span class="xp">+15</span><h3>'+a[0]+'</h3><div class="more">'+a[1]+'</div>';c.onclick=()=>{c.classList.toggle('open');c.classList.add('done');once(pre+i,15)};g.appendChild(c)})}
+mk('ing',ING,'i');mk('obj',OBJ,'o');
+// zones
+document.querySelectorAll('.z').forEach(z=>z.onclick=()=>{document.querySelectorAll('.z').forEach(x=>x.classList.remove('on'));z.classList.add('on','seen');const d=ZONES[z.dataset.z];$('zinfo').innerHTML='<b style="color:var(--gold)">'+d[0]+'</b><p>'+d[1]+'</p>';once('z'+z.dataset.z,20)});
+// quiz
+let qi=0,locked=false;
+function renderQ(){const q=QUIZ.questions;if(qi>=q.length){$('quiz').innerHTML='<h3>پایان ماموریت 🎬</h3><p class="lead">امتیاز آزمون: '+S.score+' از '+q.length+' · سطح '+(Math.floor(S.xp/100)+1)+'</p><button class="btn" onclick="resetQ()">دوباره</button>';if(S.score>=9)once('master',100,'🏆 استاد دارت +۱۰۰');return}
+const x=q[qi];const L='ABCD';$('quiz').innerHTML='<small style="color:var(--mut)">سوال '+(qi+1)+' از '+q.length+'</small><h3 style="margin:8px 0 14px">'+x.stem+'</h3>'+x.options.map((o,i)=>'<button class="opt" data-k="'+L[i]+'">'+o+'</button>').join('')+'<div id="expl"></div>';locked=false;
+document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(locked)return;locked=true;const ok=b.dataset.k===x.answer;document.querySelectorAll('.opt').forEach(o=>{if(o.dataset.k===x.answer)o.classList.add('ok')});if(ok){S.streak++;S.score++;gain(25+Math.min(S.streak,5)*5,'درست! 🔥 '+S.streak)}else{b.classList.add('bad');S.streak=0;toast('نه این بار');hud()}$('expl').textContent=x.explanation;save();const n=document.createElement('button');n.className='btn';n.textContent=qi==q.length-1?'پایان':'بعدی';n.onclick=()=>{qi++;renderQ()};$('quiz').appendChild(n)})}
+function resetQ(){qi=0;S.score=0;S.streak=0;save();hud();renderQ()}
+function badges(){const B=[["کاوشگر نواحی",Object.keys(S.seen).filter(k=>k[0]=='z').length>=5],["متخصص ترکیبات",Object.keys(S.seen).filter(k=>/^i\d/.test(k)).length>=6],["برنده اعتراض",Object.keys(S.seen).filter(k=>/^o\d/.test(k)).length>=6],["استاد دارت",!!S.seen.master],["سطح ۵",S.xp>=400]];$('badges').innerHTML=B.map(b=>'<span class="badge'+(b[1]?' on':'')+'">'+(b[1]?'★ ':'')+b[0]+'</span>').join('')}
+// reveal + progress + timeline
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.2});
+document.querySelectorAll('.reveal').forEach(e=>io.observe(e));
+const tio=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)document.querySelectorAll('.tl div').forEach((d,i)=>setTimeout(()=>d.classList.add('in'),i*500))}),{threshold:.5});tio.observe(document.querySelector('.tl'));
+addEventListener('scroll',()=>{$('prog').style.width=(scrollY/(document.body.scrollHeight-innerHeight)*100)+'%'});
+// particles
+const c=$('fx'),g=c.getContext('2d');let P=[];function rs(){c.width=innerWidth;c.height=innerHeight}rs();addEventListener('resize',rs);
+for(let i=0;i<70;i++)P.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*2+.5,v:Math.random()*.4+.1,h:Math.random()});
+(function a(){g.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.y-=p.v;if(p.y<0){p.y=c.height;p.x=Math.random()*c.width}g.fillStyle=p.h>.5?'rgba(232,194,122,.5)':'rgba(255,107,157,.4)';g.beginPath();g.arc(p.x,p.y,p.r,0,7);g.fill()});requestAnimationFrame(a)})();
+hud();renderQ();
+</script>
+</body>
+</html>
